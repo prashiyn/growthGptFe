@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { signToken, verifyToken } from '@/lib/auth/session';
+import createMiddleware from 'next-intl/middleware';
+import { locales, defaultLocale } from './config/site';
 
 const protectedRoutes = '/dashboard';
+const publicRoutes = ['/home', '/sign-in', '/sign-up'];
+
+// Create internationalization middleware
+const intlMiddleware = createMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'as-needed'
+});
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = request.cookies.get('session');
   const isProtectedRoute = pathname.startsWith(protectedRoutes);
+  const isPublicRoute = publicRoutes.some(route => pathname.includes(route));
 
   if (isProtectedRoute && !sessionCookie) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
@@ -40,9 +51,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return res;
+  // Apply i18n middleware
+  return intlMiddleware(request);
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
 };

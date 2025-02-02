@@ -8,6 +8,20 @@
       "when": 1726443359662,
       "tag": "0000_soft_the_anarchist",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1738217048466,
+      "tag": "0001_cuddly_zombie",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1738480973857,
+      "tag": "0002_keen_millenium_guard",
+      "breakpoints": true
     }
   ]
 }

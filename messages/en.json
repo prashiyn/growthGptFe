@@ -1,0 +1,90 @@
+{
+  "company": {
+    "name": "GrowGpt"
+  },
+  "common": {
+    "brand": "GrowGpt",
+    "pricing": "Pricing",
+    "signUp": "Sign Up",
+    "signOut": "Sign out",
+    "dashboard": "Dashboard",
+    "footer": {
+      "company": "Company",
+      "about": "About Us",
+      "blog": "Blog"
+    }
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "register": "Register"
+  },
+  "metadata": {
+    "title": "Build your business with AI",
+    "description": "GrowGpt is a platform that helps you market your business with AI."
+  },
+  "home": {
+    "subTitle": "AI Agents for Social Media Marketing",
+    "title": "Grow your business with AI.",
+    "description": "GrowGpt gives you AI agents that semi autonomously runs your marketing campaigns on social media.",
+    "getStarted": "Get started with AI Agents",
+    "benefits1": {
+      "title": "Effortless social Media Marketing",
+      "description": "AI-powered agents create, schedule, and optimize posts across platforms, saving you time and effort while ensuring consistent engagement."
+    },
+    "benefits2": {
+      "title": "Smarter Targeting & Higher Conversions",
+      "description": "Leverage AI-driven insights to reach the right audience with the right message, boosting customer engagement and maximizing ROI."
+    },
+    "benefits3": {
+      "title": "Affordable & Scalable Growth",
+      "description": "No need for expensive agencies—get powerful marketing automation at a fraction of the cost, designed to scale as your business grows."
+    },
+    "testimonials": {
+      "title": "What Our Users Say",
+      "description": "GrowGpt has revolutionized how we market our products! Its effortless and effective."
+    },
+    "cta": {
+      "title": "Start Growing Your Business Today",
+      "description": "Sign up now and let AI take your marketing to the next level.",
+      "button": "Get Started for Free"
+    },
+    "footer": {
+      "company": "Company",
+      "about": "About Us",
+      "blog": "Blog"
+    },
+    "ready": {
+      "title": "Ready to get started?",
+      "description": "Our prebuilt templates give you everything you need to launch your marketing instantly. Skip the hassle of starting from scratch and focus on what makes your business stand out.",
+      "button": "Get Started for Free"
+    },
+    "meetYourTeam": {
+      "title": "Meet Your AI Marketing Team",
+      "description": "Our AI agents are designed to work together seamlessly, ensuring your marketing strategy is always on point and your campaigns are always optimized."
+    }
+  },
+  "menu": {
+    "home": "Home",
+    "pricing": "Pricing",
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "dashboard": "Dashboard",
+    "signOut": "Sign Out",
+    "company": "Company",
+    "about": "About Us",
+    "blog": "Blog"
+  },
+  "nav": {
+    "user": {
+      "upgrade": "Upgrade to Pro",
+      "account": "Account",
+      "team": "Team",
+      "general": "General",
+      "activity": "Activity",
+      "security": "Security",
+      "signOut": "Sign out"
+    }
+  }
+} 

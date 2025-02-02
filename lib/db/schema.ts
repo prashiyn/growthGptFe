@@ -5,6 +5,9 @@ import {
   text,
   timestamp,
   integer,
+  pgEnum,
+  uuid,
+  boolean,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -14,19 +17,34 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   role: varchar('role', { length: 20 }).notNull().default('member'),
+  avatar: text('avatar'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
+  firstName: varchar('first_name', { length: 100 }),
+  lastName: varchar('last_name', { length: 100 }),
+});
+
+export const organizationTypeEnum = pgEnum('organization_type', ['personal', 'company']);
+
+export const organizations = pgTable('organizations', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  website: varchar('website', { length: 255 }),
+  subdomain: varchar('subdomain', { length: 50 }).unique().notNull(),
+  type: organizationTypeEnum('type').notNull().default('personal'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 export const teams = pgTable('teams', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
+  organizationId: integer('organization_id')
+    .notNull()
+    .references(() => organizations.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  stripeCustomerId: text('stripe_customer_id').unique(),
-  stripeSubscriptionId: text('stripe_subscription_id').unique(),
-  stripeProductId: text('stripe_product_id'),
   planName: varchar('plan_name', { length: 50 }),
   subscriptionStatus: varchar('subscription_status', { length: 20 }),
 });
@@ -59,6 +77,9 @@ export const invitations = pgTable('invitations', {
   teamId: integer('team_id')
     .notNull()
     .references(() => teams.id),
+  organizationId: integer('organization_id')
+    .notNull()
+    .references(() => organizations.id),
   email: varchar('email', { length: 255 }).notNull(),
   role: varchar('role', { length: 50 }).notNull(),
   invitedBy: integer('invited_by')
@@ -68,7 +89,71 @@ export const invitations = pgTable('invitations', {
   status: varchar('status', { length: 20 }).notNull().default('pending'),
 });
 
-export const teamsRelations = relations(teams, ({ many }) => ({
+export const apps = pgTable('apps', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  teamId: integer('team_id')
+    .notNull()
+    .references(() => teams.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  status: varchar('status', { length: 20 }).notNull().default('active'),
+});
+
+export const socialAccounts = pgTable('social_accounts', {
+  id: serial('id').primaryKey(),
+  appId: integer('app_id')
+    .notNull()
+    .references(() => apps.id),
+  platform: varchar('platform', { length: 20 }).notNull(), // facebook, instagram, google, linkedin
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  platformUserId: varchar('platform_user_id', { length: 100 }),
+  platformPageId: varchar('platform_page_id', { length: 100 }),
+  status: varchar('status', { length: 20 }).notNull().default('active'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const campaigns = pgTable('campaigns', {
+  id: serial('id').primaryKey(),
+  appId: integer('app_id')
+    .notNull()
+    .references(() => apps.id),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  status: varchar('status', { length: 20 }).notNull().default('draft'),
+  startDate: timestamp('start_date'),
+  endDate: timestamp('end_date'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const billings = pgTable('billings', {
+  id: serial('id').primaryKey(),
+  organizationId: integer('organization_id')
+    .notNull()
+    .references(() => organizations.id),
+  pgProvider: varchar('pg_provider', { length: 20 }).notNull(), // stripe, paypal etc
+  customerId: text('customer_id').unique(),
+  subscriptionId: text('subscription_id').unique(),
+  productId: text('product_id'),
+  isActive: boolean('is_active').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  teams: many(teams),
+  billings: many(billings),
+}));
+
+export const teamsRelations = relations(teams, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [teams.organizationId],
+    references: [organizations.id],
+  }),
   teamMembers: many(teamMembers),
   activityLogs: many(activityLogs),
   invitations: many(invitations),
@@ -83,6 +168,10 @@ export const invitationsRelations = relations(invitations, ({ one }) => ({
   team: one(teams, {
     fields: [invitations.teamId],
     references: [teams.id],
+  }),
+  organization: one(organizations, {
+    fields: [invitations.organizationId],
+    references: [organizations.id],
   }),
   invitedBy: one(users, {
     fields: [invitations.invitedBy],
@@ -109,6 +198,36 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   user: one(users, {
     fields: [activityLogs.userId],
     references: [users.id],
+  }),
+}));
+
+export const appsRelations = relations(apps, ({ one, many }) => ({
+  team: one(teams, {
+    fields: [apps.teamId],
+    references: [teams.id],
+  }),
+  socialAccounts: many(socialAccounts),
+  campaigns: many(campaigns),
+}));
+
+export const socialAccountsRelations = relations(socialAccounts, ({ one }) => ({
+  app: one(apps, {
+    fields: [socialAccounts.appId],
+    references: [apps.id],
+  }),
+}));
+
+export const campaignsRelations = relations(campaigns, ({ one }) => ({
+  app: one(apps, {
+    fields: [campaigns.appId],
+    references: [apps.id],
+  }),
+}));
+
+export const billingsRelations = relations(billings, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [billings.organizationId],
+    references: [organizations.id],
   }),
 }));
 
@@ -140,3 +259,16 @@ export enum ActivityType {
   INVITE_TEAM_MEMBER = 'INVITE_TEAM_MEMBER',
   ACCEPT_INVITATION = 'ACCEPT_INVITATION',
 }
+
+export type App = typeof apps.$inferSelect;
+export type NewApp = typeof apps.$inferInsert;
+export type SocialAccount = typeof socialAccounts.$inferSelect;
+export type NewSocialAccount = typeof socialAccounts.$inferInsert;
+export type Campaign = typeof campaigns.$inferSelect;
+export type NewCampaign = typeof campaigns.$inferInsert;
+
+export type Organization = typeof organizations.$inferSelect;
+export type NewOrganization = typeof organizations.$inferInsert;
+
+export type Billing = typeof billings.$inferSelect;
+export type NewBilling = typeof billings.$inferInsert;

@@ -1,6 +1,6 @@
 import { desc, and, eq, isNull } from 'drizzle-orm';
 import { db } from './drizzle';
-import { activityLogs, teamMembers, teams, users } from './schema';
+import { activityLogs, teamMembers, teams, users, organizations } from './schema';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth/session';
 
@@ -67,15 +67,17 @@ export async function updateTeamSubscription(
 export async function getUserWithTeam(userId: number) {
   const result = await db
     .select({
-      user: users,
-      teamId: teamMembers.teamId,
+      teamId: teams.id,
+      organizationId: organizations.id,
+      role: teamMembers.role,
     })
-    .from(users)
-    .leftJoin(teamMembers, eq(users.id, teamMembers.userId))
-    .where(eq(users.id, userId))
+    .from(teamMembers)
+    .innerJoin(teams, eq(teams.id, teamMembers.teamId))
+    .innerJoin(organizations, eq(organizations.id, teams.organizationId))
+    .where(eq(teamMembers.userId, userId))
     .limit(1);
 
-  return result[0];
+  return result[0] || null;
 }
 
 export async function getActivityLogs() {

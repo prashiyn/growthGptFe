@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { TeamDataWithMembers, User } from '@/lib/db/schema';
 import { getTeamForUser, getUser } from '@/lib/db/queries';
 import { redirect } from 'next/navigation';
+import { db } from '@/lib/db/drizzle';
+import { eq } from 'drizzle-orm';
+import { teams, organizations, teamMembers } from '@/lib/db/schema';
 
 export type ActionState = {
   error?: string;
@@ -73,3 +76,37 @@ export function withTeam<T>(action: ActionWithTeamFunction<T>) {
     return action(formData, team);
   };
 }
+
+export async function withOrganization<T>(
+  handler: (data: T, organization: { id: number }) => Promise<any>,
+  redirectTo = '/pricing'
+) {
+  return async (data: T) => {
+    const user = await getUser();
+    if (!user) {
+      redirect('/sign-in');
+    }
+
+    // Get user's organization through team membership
+    const orgData = await db
+      .select({
+        organizationId: organizations.id,
+      })
+      .from(teamMembers)
+      .innerJoin(teams, eq(teams.id, teamMembers.teamId))
+      .innerJoin(organizations, eq(organizations.id, teams.organizationId))
+      .where(eq(teamMembers.userId, user.id))
+      .limit(1);
+
+    if (!orgData[0]?.organizationId) {
+      redirect(redirectTo);
+    }
+
+    return handler(data, { id: orgData[0].organizationId });
+  };
+}
+
+// Usage example:
+export const billingAction = withOrganization(async (data, organization) => {
+  // Access organization.id here for billing operations
+});
